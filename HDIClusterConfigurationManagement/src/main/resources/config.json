@@ -1,0 +1,67 @@
+{
+  "ambariUrl": "https://jeezra-2v4-201605251115.cloudapp.net",
+  "ambariUsername": "admin",
+  "ambariPassword": "eSO1gZ}v-|Xo$@",
+  "services": {
+    "SPARK": {
+      "configFiles": {
+        "spark-defaults": {},
+        "spark-env": {},
+        "spark-hive-site-override": {},
+        "spark-log4j-properties": {},
+        "spark-metrics-properties": {},
+        "spark-thrift-sparkconf": {}
+      }
+    },
+    "YARN": {
+      "configFiles": {
+        "yarn-site": {
+          "ignore": [
+            "hadoop.registry.zk.quorum",
+            "yarn.log.server.url",
+            "yarn.resourcemanager.address",
+            "yarn.resourcemanager.address.rm1",
+            "yarn.resourcemanager.address.rm2",
+            "yarn.resourcemanager.admin.address",
+            "yarn.resourcemanager.admin.address.rm1",
+            "yarn.resourcemanager.admin.address.rm2",
+            "yarn.resourcemanager.hostname",
+            "yarn.resourcemanager.hostname.rm1",
+            "yarn.resourcemanager.hostname.rm2",
+            "yarn.resourcemanager.resource-tracker.address",
+            "yarn.resourcemanager.resource-tracker.address.rm1",
+            "yarn.resourcemanager.resource-tracker.address.rm2",
+            "yarn.resourcemanager.scheduler.address",
+            "yarn.resourcemanager.scheduler.address.rm1",
+            "yarn.resourcemanager.scheduler.address.rm2",
+            "yarn.resourcemanager.webapp.address",
+            "yarn.resourcemanager.webapp.address.rm1",
+            "yarn.resourcemanager.webapp.address.rm2",
+            "yarn.resourcemanager.webapp.https.address",
+            "yarn.resourcemanager.zk-address",
+            "yarn.timeline-service.address",
+            "yarn.timeline-service.sqldb-store.connection-url",
+            "yarn.timeline-service.sqldb-store.connection-username",
+            "yarn.timeline-service.sqldb-store.connection-password",
+            "yarn.timeline-service.webapp.address",
+            "yarn.timeline-service.webapp.https.address"
+          ]
+        },
+        "yarn-env": {},
+        "yarn-log4j": {}
+      }
+    },
+    "LIVY": {
+      "configFiles": {
+        "livy-defaults": {
+          "ignore": [
+            "livy.server.recovery.zk.state-store.address"
+          ]
+        },
+        "livy-log4j-properties": {}
+      }
+    },
+    "JUPYTER": {}
+  },
+  "location": "D:\\temp\\configs\\test1648"
+}
