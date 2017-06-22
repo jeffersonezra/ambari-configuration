@@ -180,7 +180,9 @@
         "webhcat-site": {
           "ignore": [
             "templeton.hive.properties",
-            "templeton.zookeeper.hosts"
+            "templeton.zookeeper.hosts",
+            "webhcat.proxyuser.*.groups",
+            "webhcat.proxyuser.*.hosts"
           ]
         }
       }
@@ -212,6 +214,7 @@
             "oozie.base.url",
             "oozie.service.JPAService.jdbc.password",
             "oozie.service.JPAService.jdbc.url",
+            "oozie.service.JPAService.jdbc.username",
             "oozie.zookeeper.connection.string"
           ]
         }
@@ -281,6 +284,8 @@
             "yarn.resourcemanager.webapp.https.address",
             "yarn.resourcemanager.zk-address",
             "yarn.timeline-service.address",
+            "yarn.timeline-service.http-authentication.proxyuser.*.groups",
+            "yarn.timeline-service.http-authentication.proxyuser.*.hosts",
             "yarn.timeline-service.sqldb-store.connection-password",
             "yarn.timeline-service.sqldb-store.connection-url",
             "yarn.timeline-service.sqldb-store.connection-username",
