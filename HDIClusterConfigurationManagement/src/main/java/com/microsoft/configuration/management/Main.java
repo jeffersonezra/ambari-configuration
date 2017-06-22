@@ -5,7 +5,6 @@ import com.google.gson.internal.Streams;
 import com.google.gson.internal.bind.ArrayTypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import com.sun.org.apache.xerces.internal.impl.xpath.regex.Match;
 import org.joda.time.*;
 import org.apache.commons.lang3.StringUtils;
 import sun.misc.BASE64Encoder;
@@ -275,6 +274,7 @@ public class Main {
                         desiredConfig.tag = (tag == null) ? (downloadComponent.getKey() + Long.toString(System.currentTimeMillis())) : tag.getAsString();
                         desiredConfig.properties = downloadedComponentConfig.items.get(0).properties;
                         desiredConfig.properties_attributes = propertiesAttributes;
+                        desiredConfig.service_config_version_note = "Configs updated by HDInsight Cluster Configuration Management client tool.";
                         ClusterConfig config = new ClusterConfig();
                         config.desired_config = desiredConfig;
                         NewClusterConfig newClusterConfig = new NewClusterConfig();
