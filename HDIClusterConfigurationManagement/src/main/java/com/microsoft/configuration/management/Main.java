@@ -278,7 +278,7 @@ public class Main {
                             if (propertiesAttributes == null || propertiesAttributes.finalAttributes == null || propertiesAttributes.finalAttributes.isEmpty()) {
                                 propertiesAttributes = targetComponentConfig.items.get(0).properties_attributes;
                             }
-                            else if (targetComponentConfig.items.get(0).properties_attributes != null && !targetComponentConfig.items.get(0).properties_attributes.finalAttributes.isEmpty()) {
+                            else if (targetComponentConfig.items.get(0).properties_attributes != null && targetComponentConfig.items.get(0).properties_attributes.finalAttributes != null && !targetComponentConfig.items.get(0).properties_attributes.finalAttributes.isEmpty()) {
                                 System.out.println("Merging properties attributes from cluster for " + downloadComponent.getKey());
                                 for (Map.Entry<String, String> attribute : targetComponentConfig.items.get(0).properties_attributes.finalAttributes.entrySet()) {
                                     if (!propertiesAttributes.finalAttributes.containsKey(attribute.getKey())) {
