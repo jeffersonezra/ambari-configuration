@@ -125,7 +125,7 @@ public class Main {
                                 System.out.println("Querying current configuration for " + component.getKey());
                                 result = GetCurrentConfiguration(ambariHost, ambariUsername, ambariPassword, clusterName, configVersion.getKey(), configVersion.getValue().tag);
                                 if (result.ResponseCode != 200) {
-                                    // throw exception
+                                    throw new RuntimeException("Failed to retrieve configuration for " + component.getKey());
                                 }
 
                                 CurrentConfig currentConfig = gson.fromJson(result.Content, CurrentConfig.class);
