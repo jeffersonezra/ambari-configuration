@@ -27,11 +27,13 @@ import com.google.gson.JsonObject;
 public class Main {
 
     static JsonObject configuration = null;
+    static boolean shouldRestartService = false;
 
     public static void main(String[] args) throws  Exception {
 
         Scanner scanner = new Scanner(System.in);
         int actionType = Integer.MIN_VALUE;
+        int serviceRestartType = Integer.MIN_VALUE;
         String configFilePath = null;
 
         while (actionType == Integer.MIN_VALUE || actionType < 1 || actionType > 3) {
@@ -46,6 +48,23 @@ public class Main {
         if (actionType == 3) {
             return;
         }
+
+        if (actionType == 2) {
+            while (serviceRestartType == Integer.MIN_VALUE || serviceRestartType < 1 || serviceRestartType > 3) {
+                System.out.println("Press 1 to enable service restart after config update, 2 to disable service restart, 3 to exit: ");
+                if (scanner.hasNextInt()) {
+                    serviceRestartType = scanner.nextInt();
+                } else {
+                    scanner.next();
+                }
+            }
+
+            if (serviceRestartType == 3) {
+                return;
+            }
+        }
+
+        shouldRestartService = serviceRestartType == 1;
 
         System.out.println("Location of configuration file (example - config.json): ");
         configFilePath = scanner.next();
@@ -289,7 +308,7 @@ public class Main {
                 }
             }
 
-            if (configurationUpdated) {
+            if (configurationUpdated && shouldRestartService) {
                 System.out.println("Sleeping 75 seconds for configuration updates to be detected by Ambari");
                 Thread.sleep(75000);
                 RestartUpdatedServices(targetAmbariHost, targetAmbariUsername, targetAmbariPassword, targetClusterName);
