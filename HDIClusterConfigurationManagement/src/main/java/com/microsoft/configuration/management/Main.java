@@ -479,16 +479,23 @@ public class Main {
             throw new AuthenticationException("Invalid credentials provided. Please ensure your username and password are correct.");
         }
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-        String inputLine;
-        StringBuffer response = new StringBuffer();
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
-        while ((inputLine = reader.readLine()) != null) {
-            response.append(inputLine);
+            String inputLine;
+            StringBuffer response = new StringBuffer();
+
+            while ((inputLine = reader.readLine()) != null) {
+                response.append(inputLine);
+            }
+            return new HttpResult(responseCode, response.toString());
         }
-        reader.close();
-
-        return new HttpResult(responseCode, response.toString());
+        finally {
+            if (reader != null) {
+                reader.close();
+            }
+        }
     }
 
     public static HttpResult SendHttpPutRequest(URL requestUrl, String ambariUsername, String ambariPassword, String content) throws Exception
@@ -512,16 +519,24 @@ public class Main {
             wr.close();
         }
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-        String inputLine;
-        StringBuffer response = new StringBuffer();
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            String inputLine;
+            StringBuffer response = new StringBuffer();
 
-        while ((inputLine = reader.readLine()) != null) {
-            response.append(inputLine);
+            while ((inputLine = reader.readLine()) != null) {
+                response.append(inputLine);
+            }
+
+            int responseCode = connection.getResponseCode();
+            return new HttpResult(responseCode, response.toString());
         }
-        reader.close();
-        int responseCode = connection.getResponseCode();
-        return new HttpResult(responseCode, response.toString());
+        finally {
+            if (reader != null) {
+                reader.close();
+            }
+        }
     }
 
     public static HttpResult SendHttpPostRequest(URL requestUrl, String ambariUsername, String ambariPassword, String content) throws Exception
@@ -545,16 +560,24 @@ public class Main {
             wr.close();
         }
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-        String inputLine;
-        StringBuffer response = new StringBuffer();
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            String inputLine;
+            StringBuffer response = new StringBuffer();
 
-        while ((inputLine = reader.readLine()) != null) {
-            response.append(inputLine);
+            while ((inputLine = reader.readLine()) != null) {
+                response.append(inputLine);
+            }
+
+            int responseCode = connection.getResponseCode();
+            return new HttpResult(responseCode, response.toString());
         }
-        reader.close();
-        int responseCode = connection.getResponseCode();
-        return new HttpResult(responseCode, response.toString());
+        finally {
+            if (reader != null) {
+                reader.close();
+            }
+        }
     }
 
     private static void SkipServerCertificateValidation() throws Exception
@@ -586,9 +609,10 @@ public class Main {
     }
 
     private static JsonObject readConfigurationFromFile(String filename) throws Exception {
+        BufferedReader br = null;
         try {
             Gson gson = new Gson();
-            BufferedReader br = null;
+
             br = new BufferedReader(new FileReader(filename));
             JsonObject configuration = gson.fromJson(br, JsonElement.class).getAsJsonObject();
             return configuration;
@@ -596,6 +620,11 @@ public class Main {
         catch (JsonSyntaxException ex) {
             System.out.println("Failed to parse file '" + filename + "'. Please ensure the file has correct json format.");
             throw ex;
+        }
+        finally {
+            if (br != null) {
+                br.close();
+            }
         }
     }
 }
