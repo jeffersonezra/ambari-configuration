@@ -8,4 +8,6 @@ public class DesiredConfig {
     public String type;
     public String tag;
     public Map<String,String> properties;
+    public PropertiesAttributes properties_attributes;
+    public String service_config_version_note;
 }

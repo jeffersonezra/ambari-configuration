@@ -1,4 +1,5 @@
 package com.microsoft.configuration.management;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.internal.LinkedTreeMap;
 import com.google.gson.internal.Streams;
 import com.google.gson.internal.bind.ArrayTypeAdapter;
@@ -8,6 +9,7 @@ import org.joda.time.*;
 import org.apache.commons.lang3.StringUtils;
 import sun.misc.BASE64Encoder;
 
+import javax.naming.AuthenticationException;
 import javax.net.ssl.*;
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -15,6 +17,8 @@ import java.net.URL;
 import java.nio.file.Paths;
 import java.security.cert.X509Certificate;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -23,11 +27,13 @@ import com.google.gson.JsonObject;
 public class Main {
 
     static JsonObject configuration = null;
+    static boolean shouldRestartService = false;
 
     public static void main(String[] args) throws  Exception {
 
         Scanner scanner = new Scanner(System.in);
         int actionType = Integer.MIN_VALUE;
+        int serviceRestartType = Integer.MIN_VALUE;
         String configFilePath = null;
 
         while (actionType == Integer.MIN_VALUE || actionType < 1 || actionType > 3) {
@@ -43,6 +49,23 @@ public class Main {
             return;
         }
 
+        if (actionType == 2) {
+            while (serviceRestartType == Integer.MIN_VALUE || serviceRestartType < 1 || serviceRestartType > 3) {
+                System.out.println("Press 1 to enable service restart after config update, 2 to disable service restart, 3 to exit: ");
+                if (scanner.hasNextInt()) {
+                    serviceRestartType = scanner.nextInt();
+                } else {
+                    scanner.next();
+                }
+            }
+
+            if (serviceRestartType == 3) {
+                return;
+            }
+        }
+
+        shouldRestartService = serviceRestartType == 1;
+
         System.out.println("Location of configuration file (example - config.json): ");
         configFilePath = scanner.next();
 
@@ -52,8 +75,6 @@ public class Main {
         String ambariUsername = configuration.get("ambariUsername").getAsString();
         String ambariPassword = configuration.get("ambariPassword").getAsString();
         String clusterName = ambariUrl.getHost().split("\\.")[0];
-
-        SkipServerCertificateValidation();
 
         switch (actionType) {
             case 1:
@@ -80,7 +101,7 @@ public class Main {
 
         if (!Paths.get(location).toFile().exists()){
             System.out.println("Location " + location + " does not exist. Creating");
-            Paths.get(location).toFile().mkdir();
+            Paths.get(location).toFile().mkdirs();
         }
 
         if (servicesToDownload == null) {
@@ -104,7 +125,7 @@ public class Main {
                                 System.out.println("Querying current configuration for " + component.getKey());
                                 result = GetCurrentConfiguration(ambariHost, ambariUsername, ambariPassword, clusterName, configVersion.getKey(), configVersion.getValue().tag);
                                 if (result.ResponseCode != 200) {
-                                    // throw exception
+                                    throw new RuntimeException("Failed to retrieve configuration for " + component.getKey());
                                 }
 
                                 CurrentConfig currentConfig = gson.fromJson(result.Content, CurrentConfig.class);
@@ -115,9 +136,11 @@ public class Main {
 
                                 if (cleanup != null && currentConfig.items.get(0).properties.entrySet() != null) {
                                     System.out.println("Cleaning up sensitive data");
-                                    for (String item : cleanup) {
+                                    for (String ignoredItem : cleanup) {
                                         for (Map.Entry<String, String> property : currentConfig.items.get(0).properties.entrySet()) {
-                                            if (item.equalsIgnoreCase(property.getKey())) {
+                                            Pattern pattern = Pattern.compile(ignoredItem, Pattern.CASE_INSENSITIVE);
+                                            Matcher matcher = pattern.matcher(property.getKey());
+                                            if (matcher.matches()) {
                                                 property.setValue(null);
                                             }
                                         }
@@ -133,6 +156,7 @@ public class Main {
                                 String configDownloadFilename = Paths.get(location, service.getKey(), currentConfig.items.get(0).type).toString();
                                 configDownloadFilename += ".json";
                                 JsonWriter jsonWriter = gson.newJsonWriter(new BufferedWriter(new FileWriter(configDownloadFilename)));
+                                jsonWriter.setIndent("  ");
                                 gson.toJson(currentConfig, CurrentConfig.class, jsonWriter);
                                 jsonWriter.close();
                             }
@@ -194,31 +218,71 @@ public class Main {
                         CurrentConfig downloadedComponentConfig = gson.fromJson(jsonReader, CurrentConfig.class);
                         jsonReader.close();
 
+                        if (downloadedComponentConfig.items == null || downloadedComponentConfig.items.isEmpty() || downloadedComponentConfig.items.get(0).properties == null) {
+                            System.out.println("There is no configuration found for " + downloadComponent.getKey() + ". Skipping...");
+                            break;
+                        }
+
                         ArrayList<String> cleanup = (ArrayList<String>) (downloadComponent.getValue().get("ignore"));
 
                         if (cleanup != null) {
-                            CurrentConfig targetComponentConfig = null;
-                            for (Map.Entry<String, ComponentConfig> targetConfigVersion : currentTargetConfigurationVersions.Clusters.desired_configs.entrySet()) {
-                                if (targetConfigVersion.getKey().equalsIgnoreCase(downloadComponent.getKey())) {
-                                    System.out.println("Querying sensitive data from cluster for " + downloadComponent.getKey());
-                                    result = GetCurrentConfiguration(targetAmbariHost, targetAmbariUsername, targetAmbariPassword, targetClusterName, targetConfigVersion.getKey(), targetConfigVersion.getValue().tag);
-                                    if (result.ResponseCode != 200) {
-                                        // throw exception
+                            System.out.println("Cleaning up ignored data from downloaded config.");
+                            for (String ignoredItem : cleanup) {
+                                for (Map.Entry<String, String> property : downloadedComponentConfig.items.get(0).properties.entrySet()) {
+                                    Pattern pattern = Pattern.compile(ignoredItem, Pattern.CASE_INSENSITIVE);
+                                    Matcher matcher = pattern.matcher(property.getKey());
+                                    if (matcher.matches()) {
+                                        property.setValue(null);
                                     }
-                                    targetComponentConfig = gson.fromJson(result.Content, CurrentConfig.class);
-                                    break;
+                                }
+                            }
+                        }
+
+                        CurrentConfig targetComponentConfig = null;
+                        System.out.println("Querying current configuration from cluster for " + downloadComponent.getKey());
+                        for (Map.Entry<String, ComponentConfig> targetConfigVersion : currentTargetConfigurationVersions.Clusters.desired_configs.entrySet()) {
+                            if (targetConfigVersion.getKey().equalsIgnoreCase(downloadComponent.getKey())) {
+                                result = GetCurrentConfiguration(targetAmbariHost, targetAmbariUsername, targetAmbariPassword, targetClusterName, targetConfigVersion.getKey(), targetConfigVersion.getValue().tag);
+                                if (result.ResponseCode != 200) {
+                                    throw new RuntimeException("Failed to retrieve configuration for config " + targetConfigVersion.getKey());
+                                }
+                                targetComponentConfig = gson.fromJson(result.Content, CurrentConfig.class);
+                                break;
+                            }
+                        }
+
+                        PropertiesAttributes propertiesAttributes = downloadedComponentConfig.items.get(0).properties_attributes;
+                        if (targetComponentConfig != null && targetComponentConfig.items != null && !targetComponentConfig.items.isEmpty()) {
+                            if (targetComponentConfig.items.get(0).properties != null && !targetComponentConfig.items.get(0).properties.isEmpty()) {
+                                System.out.println("Merging current configurations from cluster for " + downloadComponent.getKey());
+
+                                for (Map.Entry<String, String> property : targetComponentConfig.items.get(0).properties.entrySet()) {
+                                    // if this property doesn't exist in downloaded config, append it to downloaded config
+                                    if (!downloadedComponentConfig.items.get(0).properties.containsKey(property.getKey())) {
+                                        downloadedComponentConfig.items.get(0).properties.put(property.getKey(), property.getValue());
+                                    }
+                                    // we will merge the config from cluster if it is in the ignored list
+                                    else if (cleanup != null && !cleanup.isEmpty()) {
+                                        for (String ignoredItem : cleanup) {
+                                            Pattern pattern = Pattern.compile(ignoredItem, Pattern.CASE_INSENSITIVE);
+                                            Matcher matcher = pattern.matcher(property.getKey());
+                                            if (matcher.matches()) {
+                                                downloadedComponentConfig.items.get(0).properties.put(property.getKey(), property.getValue());
+                                                break;
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
-                            if (targetComponentConfig != null) {
-                                System.out.println("Merging sensitive data from cluster for " + downloadComponent.getKey());
-
-                                for (String item : cleanup) {
-                                    for (Map.Entry<String, String> property : targetComponentConfig.items.get(0).properties.entrySet()) {
-                                        if (item.equalsIgnoreCase(property.getKey())) {
-                                            downloadedComponentConfig.items.get(0).properties.put(property.getKey(), property.getValue());
-                                            break;
-                                        }
+                            if (propertiesAttributes == null || propertiesAttributes.finalAttributes == null || propertiesAttributes.finalAttributes.isEmpty()) {
+                                propertiesAttributes = targetComponentConfig.items.get(0).properties_attributes;
+                            }
+                            else if (targetComponentConfig.items.get(0).properties_attributes != null && targetComponentConfig.items.get(0).properties_attributes.finalAttributes != null && !targetComponentConfig.items.get(0).properties_attributes.finalAttributes.isEmpty()) {
+                                System.out.println("Merging properties attributes from cluster for " + downloadComponent.getKey());
+                                for (Map.Entry<String, String> attribute : targetComponentConfig.items.get(0).properties_attributes.finalAttributes.entrySet()) {
+                                    if (!propertiesAttributes.finalAttributes.containsKey(attribute.getKey())) {
+                                        propertiesAttributes.finalAttributes.put(attribute.getKey(), attribute.getValue());
                                     }
                                 }
                             }
@@ -230,6 +294,8 @@ public class Main {
                         desiredConfig.type = downloadComponent.getKey();
                         desiredConfig.tag = (tag == null) ? (downloadComponent.getKey() + Long.toString(System.currentTimeMillis())) : tag.getAsString();
                         desiredConfig.properties = downloadedComponentConfig.items.get(0).properties;
+                        desiredConfig.properties_attributes = propertiesAttributes;
+                        desiredConfig.service_config_version_note = "Configs updated by HDInsight Cluster Configuration Management client tool.";
                         ClusterConfig config = new ClusterConfig();
                         config.desired_config = desiredConfig;
                         NewClusterConfig newClusterConfig = new NewClusterConfig();
@@ -237,7 +303,7 @@ public class Main {
 
                         result = SetNewConfiguration(targetAmbariHost, targetAmbariUsername, targetAmbariPassword, targetClusterName, newClusterConfig);
                         if (result.ResponseCode != 200) {
-                            // throw exception
+                            throw new RuntimeException("Failed to update configuration for " + downloadComponent.getKey());
                         }
                         configurationUpdated = true;
                     }
@@ -245,9 +311,14 @@ public class Main {
             }
 
             if (configurationUpdated) {
-                System.out.println("Sleeping 75 seconds for configuration updates to be detected by Ambari");
-                Thread.sleep(75000);
-                RestartUpdatedServices(targetAmbariHost, targetAmbariUsername, targetAmbariPassword, targetClusterName);
+                if (shouldRestartService) {
+                    System.out.println("Sleeping 75 seconds for configuration updates to be detected by Ambari");
+                    Thread.sleep(75000);
+                    RestartUpdatedServices(targetAmbariHost, targetAmbariUsername, targetAmbariPassword, targetClusterName);
+                }
+                else {
+                    System.out.println("Configurations have been updated but services have not been restarted. Please proceed to Ambari portal for restarting services.");
+                }
             }
         }
     }
@@ -408,17 +479,28 @@ public class Main {
         connection.setRequestProperty("Authorization", "Basic " + encodedLogin.trim());
 
         connection.connect();
-
-        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-        String inputLine;
-        StringBuffer response = new StringBuffer();
-
-        while ((inputLine = reader.readLine()) != null) {
-            response.append(inputLine);
-        }
-        reader.close();
         int responseCode = connection.getResponseCode();
-        return new HttpResult(responseCode, response.toString());
+        if (responseCode == 403) {
+            throw new AuthenticationException("Invalid credentials provided. Please ensure your username and password are correct.");
+        }
+
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+
+            String inputLine;
+            StringBuffer response = new StringBuffer();
+
+            while ((inputLine = reader.readLine()) != null) {
+                response.append(inputLine);
+            }
+            return new HttpResult(responseCode, response.toString());
+        }
+        finally {
+            if (reader != null) {
+                reader.close();
+            }
+        }
     }
 
     public static HttpResult SendHttpPutRequest(URL requestUrl, String ambariUsername, String ambariPassword, String content) throws Exception
@@ -442,16 +524,24 @@ public class Main {
             wr.close();
         }
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-        String inputLine;
-        StringBuffer response = new StringBuffer();
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            String inputLine;
+            StringBuffer response = new StringBuffer();
 
-        while ((inputLine = reader.readLine()) != null) {
-            response.append(inputLine);
+            while ((inputLine = reader.readLine()) != null) {
+                response.append(inputLine);
+            }
+
+            int responseCode = connection.getResponseCode();
+            return new HttpResult(responseCode, response.toString());
         }
-        reader.close();
-        int responseCode = connection.getResponseCode();
-        return new HttpResult(responseCode, response.toString());
+        finally {
+            if (reader != null) {
+                reader.close();
+            }
+        }
     }
 
     public static HttpResult SendHttpPostRequest(URL requestUrl, String ambariUsername, String ambariPassword, String content) throws Exception
@@ -475,16 +565,24 @@ public class Main {
             wr.close();
         }
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-        String inputLine;
-        StringBuffer response = new StringBuffer();
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            String inputLine;
+            StringBuffer response = new StringBuffer();
 
-        while ((inputLine = reader.readLine()) != null) {
-            response.append(inputLine);
+            while ((inputLine = reader.readLine()) != null) {
+                response.append(inputLine);
+            }
+
+            int responseCode = connection.getResponseCode();
+            return new HttpResult(responseCode, response.toString());
         }
-        reader.close();
-        int responseCode = connection.getResponseCode();
-        return new HttpResult(responseCode, response.toString());
+        finally {
+            if (reader != null) {
+                reader.close();
+            }
+        }
     }
 
     private static void SkipServerCertificateValidation() throws Exception
@@ -516,11 +614,22 @@ public class Main {
     }
 
     private static JsonObject readConfigurationFromFile(String filename) throws Exception {
-        Gson gson = new Gson();
         BufferedReader br = null;
-        br = new BufferedReader(new FileReader(filename));
-        JsonObject configuration = gson.fromJson(br, JsonElement.class).getAsJsonObject();
-        return configuration;
-    }
+        try {
+            Gson gson = new Gson();
 
+            br = new BufferedReader(new FileReader(filename));
+            JsonObject configuration = gson.fromJson(br, JsonElement.class).getAsJsonObject();
+            return configuration;
+        }
+        catch (JsonSyntaxException ex) {
+            System.out.println("Failed to parse file '" + filename + "'. Please ensure the file has correct json format.");
+            throw ex;
+        }
+        finally {
+            if (br != null) {
+                br.close();
+            }
+        }
+    }
 }
