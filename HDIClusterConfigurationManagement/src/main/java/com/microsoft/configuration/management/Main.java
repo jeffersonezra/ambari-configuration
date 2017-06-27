@@ -310,10 +310,15 @@ public class Main {
                 }
             }
 
-            if (configurationUpdated && shouldRestartService) {
-                System.out.println("Sleeping 75 seconds for configuration updates to be detected by Ambari");
-                Thread.sleep(75000);
-                RestartUpdatedServices(targetAmbariHost, targetAmbariUsername, targetAmbariPassword, targetClusterName);
+            if (configurationUpdated) {
+                if (shouldRestartService) {
+                    System.out.println("Sleeping 75 seconds for configuration updates to be detected by Ambari");
+                    Thread.sleep(75000);
+                    RestartUpdatedServices(targetAmbariHost, targetAmbariUsername, targetAmbariPassword, targetClusterName);
+                }
+                else {
+                    System.out.println("Configurations have been updated but services have not been restarted. Please proceed to Ambari portal for restarting services.");
+                }
             }
         }
     }
