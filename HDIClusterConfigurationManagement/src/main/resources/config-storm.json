@@ -1,0 +1,310 @@
+{
+  "ambariUrl": "https://stormcluster.azurehdinsight.net",
+  "ambariUsername": "admin",
+  "ambariPassword": "mypassword",
+  "location": "D:\\temp\\configs\\teststorm",
+  "services": {
+    "AMBARI_METRICS": {
+      "configFiles": {
+        "ams-env": {},
+        "ams-grafana-env": {
+          "ignore": [
+            "metrics_grafana_password"
+          ]
+        },
+        "ams-grafana-ini": {},
+        "ams-hbase-env": {},
+        "ams-hbase-log4j": {},
+        "ams-hbase-policy": {},
+        "ams-hbase-security-site": {},
+        "ams-hbase-site": {},
+        "ams-log4j": {},
+        "ams-site": {
+          "ignore": [
+            "timeline.metrics.service.webapp.address"
+          ]
+        },
+        "ams-ssl-client": {
+          "ignore": [
+            "ssl.client.truststore.password"
+          ]
+        },
+        "ams-ssl-server": {
+          "ignore": [
+            "ssl.server.keystore.keypassword",
+            "ssl.server.keystore.password",
+            "ssl.server.truststore.password"
+          ]
+        }
+      }
+    },
+    "HDFS": {
+      "configFiles": {
+        "core-site": {
+          "ignore": [
+            "fs.azure.account.key.*",
+            "fs.azure.account.keyprovider.*",
+            "fs.defaultFS",
+            "ha.zookeeper.quorum",
+            "hadoop.registry.zk.quorum",
+            "hadoop.proxyuser.*.groups",
+            "hadoop.proxyuser.*.hosts"
+          ]
+        },
+        "hadoop-env": {
+          "ignore": [
+            "dfs_ha_initial_namenode_active",
+            "dfs_ha_initial_namenode_standby"
+          ]
+        },
+        "hadoop-policy": {},
+        "hdfs-log4j": {},
+        "hdfs-site": {
+          "ignore": [
+            "dfs.namenode.http-address.mycluster.nn1",
+            "dfs.namenode.http-address.mycluster.nn2",
+            "dfs.namenode.https-address.mycluster.nn1",
+            "dfs.namenode.https-address.mycluster.nn2",
+            "dfs.namenode.rpc-address.mycluster.nn1",
+            "dfs.namenode.rpc-address.mycluster.nn2",
+            "dfs.namenode.shared.edits.dir"
+          ]
+        },
+        "ranger-hdfs-audit": {},
+        "ranger-hdfs-plugin-properties": {
+          "ignore": [
+            "REPOSITORY_CONFIG_PASSWORD"
+          ]
+        },
+        "ranger-hdfs-policymgr-ssl": {
+          "ignore": [
+            "xasecure.policymgr.clientssl.keystore.password",
+            "xasecure.policymgr.clientssl.truststore.password"
+          ]
+        },
+        "ranger-hdfs-security": {},
+        "ssl-client": {
+          "ignore": [
+            "ssl.client.keystore.password",
+            "ssl.client.truststore.password"
+          ]
+        },
+        "ssl-server": {
+          "ignore": [
+            "ssl.server.keystore.keypassword",
+            "ssl.server.keystore.password",
+            "ssl.server.truststore.password"
+          ]
+        }
+      }
+    },
+    "HIVE": {
+      "configFiles": {
+        "beeline-log4j2": {},
+        "hcat-env": {},
+        "hive-atlas-application.properties": {},
+        "hive-env": {
+          "ignore": [
+            "hive_database_name",
+            "hive_existing_mssql_server_database",
+            "hive_existing_mssql_server_host",
+            "hive_hostname"
+          ]
+        },
+        "hive-exec-log4j": {},
+        "hive-exec-log4j2": {},
+        "hive-interactive-env": {},
+        "hive-interactive-site": {
+          "ignore": [
+            "hive.llap.zk.sm.connectionString"
+          ]
+        },
+        "hive-log4j": {},
+        "hive-log4j2": {},
+        "hive-site": {
+          "ignore": [
+            "hive.cluster.delegation.token.store.zookeeper.connectString",
+            "hive.metastore.uris",
+            "hive.zookeeper.quorum",
+            "javax.jdo.option.ConnectionPassword",
+            "javax.jdo.option.ConnectionURL",
+            "javax.jdo.option.ConnectionUserName"
+          ]
+        },
+        "hivemetastore-site": {},
+        "hiveserver2-interactive-site": {},
+        "hiveserver2-site": {},
+        "llap-cli-log4j2": {},
+        "llap-daemon-log4j": {},
+        "ranger-hive-audit": {},
+        "ranger-hive-plugin-properties": {
+          "ignore": [
+            "REPOSITORY_CONFIG_PASSWORD"
+          ]
+        },
+        "ranger-hive-policymgr-ssl": {
+          "ignore": [
+            "xasecure.policymgr.clientssl.keystore.password",
+            "xasecure.policymgr.clientssl.truststore.password"
+          ]
+        },
+        "ranger-hive-security": {},
+        "tez-interactive-site": {},
+        "webhcat-env": {},
+        "webhcat-log4j": {},
+        "webhcat-site": {
+          "ignore": [
+            "templeton.hive.properties",
+            "templeton.zookeeper.hosts",
+            "webhcat.proxyuser.*.groups",
+            "webhcat.proxyuser.*.hosts"
+          ]
+        }
+      }
+    },
+    "MAPREDUCE2": {
+      "configFiles": {
+        "mapred-env": {},
+        "mapred-site": {
+          "ignore": [
+            "mapreduce.jobhistory.address",
+            "mapreduce.jobhistory.admin.address",
+            "mapreduce.jobhistory.webapp.address"
+          ]
+        }
+      }
+    },
+    "OOZIE": {
+      "configFiles": {
+        "oozie-env": {
+          "ignore": [
+            "oozie_existing_mssql_server_database",
+            "oozie_existing_mssql_server_host",
+            "oozie_hostname"
+          ]
+        },
+        "oozie-log4j": {},
+        "oozie-site": {
+          "ignore": [
+            "oozie.base.url",
+            "oozie.service.JPAService.jdbc.password",
+            "oozie.service.JPAService.jdbc.url",
+            "oozie.service.JPAService.jdbc.username",
+            "oozie.zookeeper.connection.string"
+          ]
+        }
+      }
+    },
+    "PIG": {
+      "configFiles": {
+        "pig-env": {},
+        "pig-log4j": {},
+        "pig-properties": {}
+      }
+    },
+    "SQOOP": {
+      "configFiles": {
+        "sqoop-atlas-application.properties": {},
+        "sqoop-env": {},
+        "sqoop-site": {}
+      }
+    },
+    "STORM": {
+      "configFiles": {
+        "ranger-storm-audit": {},
+        "ranger-storm-plugin-properties": {
+          "ignore": [
+            "REPOSITORY_CONFIG_PASSWORD",
+            "REPOSITORY_CONFIG_USERNAME"
+          ]
+        },
+        "ranger-storm-policymgr-ssl": {
+          "ignore": [
+            "xasecure.policymgr.clientssl.keystore.password",
+            "xasecure.policymgr.clientssl.truststore.password"
+          ]
+        },
+        "ranger-storm-security": {},
+        "storm-atlas-application.properties": {},
+        "storm-cluster-log4j": {},
+        "storm-env": {},
+        "storm-site": {
+          "ignore": [
+            "drpc.servers",
+            "nimbus.seeds",
+            "storm.zookeeper.servers"
+          ]
+        },
+        "storm-worker-log4j": {}
+      }
+    },
+    "TEZ": {
+      "configFiles": {
+        "tez-env": {},
+        "tez-site": {}
+      }
+    },
+    "YARN": {
+      "configFiles": {
+        "capacity-scheduler": {},
+        "ranger-yarn-audit": {},
+        "ranger-yarn-plugin-properties": {
+          "ignore": [
+            "REPOSITORY_CONFIG_PASSWORD"
+          ]
+        },
+        "ranger-yarn-policymgr-ssl": {
+          "ignore": [
+            "xasecure.policymgr.clientssl.keystore.password",
+            "xasecure.policymgr.clientssl.truststore.password"
+          ]
+        },
+        "ranger-yarn-security": {},
+        "yarn-env": {},
+        "yarn-log4j": {},
+        "yarn-site": {
+          "ignore": [
+            "hadoop.registry.zk.quorum",
+            "yarn.log.server.url",
+            "yarn.log.server.web-service.url",
+            "yarn.resourcemanager.address",
+            "yarn.resourcemanager.address.rm1",
+            "yarn.resourcemanager.address.rm2",
+            "yarn.resourcemanager.admin.address",
+            "yarn.resourcemanager.admin.address.rm1",
+            "yarn.resourcemanager.admin.address.rm2",
+            "yarn.resourcemanager.hostname",
+            "yarn.resourcemanager.hostname.rm1",
+            "yarn.resourcemanager.hostname.rm2",
+            "yarn.resourcemanager.resource-tracker.address",
+            "yarn.resourcemanager.resource-tracker.address.rm1",
+            "yarn.resourcemanager.resource-tracker.address.rm2",
+            "yarn.resourcemanager.scheduler.address",
+            "yarn.resourcemanager.scheduler.address.rm1",
+            "yarn.resourcemanager.scheduler.address.rm2",
+            "yarn.resourcemanager.webapp.address",
+            "yarn.resourcemanager.webapp.address.rm1",
+            "yarn.resourcemanager.webapp.address.rm2",
+            "yarn.resourcemanager.webapp.https.address",
+            "yarn.resourcemanager.zk-address",
+            "yarn.timeline-service.address",
+            "yarn.timeline-service.http-authentication.proxyuser.*.groups",
+            "yarn.timeline-service.http-authentication.proxyuser.*.hosts",
+            "yarn.timeline-service.sqldb-store.connection-password",
+            "yarn.timeline-service.sqldb-store.connection-url",
+            "yarn.timeline-service.sqldb-store.connection-username",
+            "yarn.timeline-service.webapp.address",
+            "yarn.timeline-service.webapp.https.address"
+          ]
+        }
+      }
+    },
+    "ZOOKEEPER": {
+      "configFiles": {
+        "zoo.cfg": {},
+        "zookeeper-env": {},
+        "zookeeper-log4j": {}
+      }
+    }
+  }
+}
